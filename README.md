@@ -1,240 +1,200 @@
 # 📺 Anime Downloader Discord Bot
 
-Le Anime Downloader Discord Bot est un projet Python conçu pour automatiser le processus de recherche, téléchargement et distribution d’épisodes d’anime directement depuis Discord. Il combine plusieurs technologies (Discord.py, yt-dlp, Flask et ngrok) afin de créer un système complet allant de la sélection d’un contenu jusqu’à la génération de liens de téléchargement accessibles en ligne.
+The Anime Downloader Discord Bot is a Python-based automation project that allows users to search, download, and retrieve anime episodes directly from Discord. It combines Discord.py, yt-dlp, Flask, and ngrok to build a complete pipeline from user commands to downloadable video links.
 
-L’objectif du bot est de simplifier l’accès à des épisodes d’anime en automatisant plusieurs étapes techniques qui seraient normalement manuelles : récupération des liens vidéo sur des pages web, téléchargement des fichiers, hébergement local temporaire et génération de liens publics.
-
----
-
-## 🧠 Principe de fonctionnement global
-
-Le système repose sur une architecture en trois couches :
-
-### 1. Interface utilisateur (Discord)
-Le bot Discord agit comme interface principale. L’utilisateur interagit uniquement via des commandes simples. Chaque commande permet de définir un paramètre précis :
-- nom de l’anime
-- saison
-- langue
-- plage d’épisodes
-
-Ces informations sont stockées temporairement en mémoire dans des variables globales, utilisées ensuite pour construire les requêtes vers les sources externes.
+The bot is designed to simplify anime episode retrieval by automating web scraping, video downloading, local file hosting, and public link generation.
 
 ---
 
-### 2. Extraction et téléchargement des épisodes
-Une fois la commande de téléchargement lancée, le bot construit une URL vers un site de catalogue d’anime. Cette URL suit une structure précise basée sur les paramètres fournis par l’utilisateur.
+## 🧠 How it works
 
-Le bot envoie ensuite une requête HTTP vers cette page et analyse le contenu HTML/JS afin d’extraire les liens vidéo. L’extraction repose sur des expressions régulières ciblant deux principales sources :
+The system is built around three main components:
+
+### 1. Discord Interface
+The bot acts as the main interface. Users interact through commands to define:
+- anime name
+- season
+- language
+- episode range
+
+These values are temporarily stored in memory and used to build requests.
+
+---
+
+### 2. Episode extraction & downloading
+When the download command is triggered, the bot:
+- builds a URL based on user input
+- fetches the anime catalog page
+- extracts video links using regex
+
+Supported sources:
 - sibnet.ru
 - sendvid.com
 
-Ces liens sont ensuite passés à `yt-dlp`, un outil capable de télécharger des vidéos depuis différentes plateformes. Chaque épisode est téléchargé localement en fichier `.mp4`.
+The extracted links are downloaded using `yt-dlp` and saved locally as `.mp4` files.
 
 ---
 
-### 3. Serveur de fichiers + distribution
-Une fois les vidéos téléchargées, elles sont stockées dans le dossier local du projet. Un serveur Flask est lancé en arrière-plan pour servir ces fichiers via HTTP.
+### 3. File hosting & sharing
+A Flask server runs in the background to serve downloaded files. ngrok exposes this server to the internet, generating a public URL.
 
-Pour rendre ce serveur accessible depuis internet, le bot utilise ngrok. ngrok crée un tunnel sécurisé entre la machine locale et une URL publique. Cette URL est ensuite utilisée pour générer des liens de téléchargement envoyés sur Discord.
-
-Après envoi des liens, les fichiers sont supprimés automatiquement pour éviter la saturation du disque.
+These links are sent back to Discord so users can download the videos. Afterward, files are automatically deleted.
 
 ---
 
-## ⚙️ Commandes du bot
+## ⚙️ Commands
 
-Le bot repose sur un système de commandes simples permettant de contrôler tout le processus.
+### 🎬 !anime <name>
+Defines the anime to download.
 
----
-
-### 🎬 !anime <nom>
-
-Définit l’anime à télécharger.
-
-Exemples :
+Examples:
 - `!anime frieren`
 - `!anime attack-on-titan`
 
-Le nom doit correspondre à l’identifiant utilisé dans l’URL du site source. Les espaces sont remplacés par des tirets.
+---
+
+### 📀 !season <number>
+Sets the anime season.
+
+Example:
+- `!season 1`
 
 ---
 
-### 📀 !saison <numéro>
+### 🈯 !language <vf/vostfr/vf1/vf2>
+Sets the audio/subtitle language.
 
-Définit la saison de l’anime.
-
-Exemple :
-- `!saison 1`
-- `!saison 2`
-
-Cette valeur est utilisée pour construire le chemin vers les épisodes.
-
----
-
-### 🈯 !langue <vf/vostfr/vf1/vf2>
-
-Définit la langue des épisodes.
-
-Options possibles :
-- vf (version française)
-- vf1 / vf2 (variantes selon sources)
-- vostfr (version originale sous-titrée)
+Options:
+- vf
+- vf1
+- vf2
+- vostfr
 
 ---
 
-### ⬇️ !run <début-fin>
+### ⬇️ !run <start-end>
+Main command to download episodes.
 
-Commande principale du bot.
+Examples:
+- `!run 1-1`
+- `!run 1-2`
 
-Elle permet de télécharger une plage d’épisodes.
-
-Exemples :
-- `!run 1-1` → 1 épisode
-- `!run 1-2` → 2 épisodes maximum
-
-Contraintes :
-- limite stricte de 2 épisodes par requête
-- gestion d’erreurs si index incorrect ou lien absent
+Limit:
+- maximum 2 episodes per request
 
 ---
 
-### 📁 !fichiers
-
-Permet de récupérer les liens de téléchargement des fichiers MP4 générés.
-
-Le bot :
-1. scanne le dossier local
-2. récupère tous les fichiers `.mp4`
-3. génère une URL publique via ngrok
-4. envoie les liens sur Discord
-
-Après envoi, les fichiers sont supprimés automatiquement.
+### 📁 !files
+Generates public download links for all `.mp4` files stored locally using Flask + ngrok.
 
 ---
 
-### ❓ !aide
-
-Affiche un embed détaillé contenant :
-- toutes les commandes
-- les règles d’utilisation
-- les limites du bot
+### ❓ !help
+Displays all available commands and usage rules.
 
 ---
 
-## 🧩 Architecture technique détaillée
+## 📦 Installation
 
-### 📡 Discord Bot
-Basé sur `discord.ext.commands`, il gère :
-- les commandes utilisateur
-- la mémoire temporaire (anime, saison, langue)
-- le déclenchement des tâches de téléchargement
+To install all required dependencies:
 
----
+```bash
+pip install -r requirements.txt
 
-### 🌐 Scraping
-Le bot interroge dynamiquement une page de catalogue anime : https://anime-sama.to/catalogue/{anime}/saison{saison}/{langue}/episodes.js
+If needed manually:
 
+pip install discord.py requests yt-dlp flask pyngrok
 
-Puis extrait les liens vidéo via regex.
+Optional (recommended):
+FFmpeg for better video compatibility:
 
----
+Windows: https://ffmpeg.org/download.html
+Linux:
+sudo apt install ffmpeg
+🚀 Running the bot
+python bot.py
 
-### 📥 Téléchargement vidéo
-yt-dlp est utilisé pour :
-- récupérer les flux vidéo
-- télécharger les fichiers en local
-- gérer les erreurs réseau et formats
+When started, the bot:
 
-Options utilisées :
-- format best
-- timeout socket
-- gestion automatique des extensions
+launches Discord client
+starts Flask server in background
+opens ngrok tunnel
+becomes ready to use
+🧩 Architecture
+Discord bot
 
----
+Handles:
 
-### 🖥️ Serveur Flask
-Flask expose les fichiers téléchargés via : /download/<filename>
+command parsing
+temporary state storage
+download triggering
+Scraping system
 
+Fetches data from:
 
-Il fonctionne en arrière-plan grâce à un thread séparé.
+https://anime-sama.to/catalogue/{anime}/season{season}/{language}/episodes.js
 
----
+Extracts video URLs using regex.
 
-### 🌍 ngrok
-ngrok crée un tunnel public vers le serveur Flask :
-- permet accès externe aux fichiers
-- génère une URL unique
-- utilisée pour partager les MP4 sur Discord
+Downloader
 
----
+Uses yt-dlp with:
 
-## 📁 Gestion des fichiers
+best format selection
+timeout handling
+automatic file naming
+Flask server
 
-Les fichiers sont :
-- stockés localement
-- nommés automatiquement par yt-dlp
-- supprimés après distribution
+Exposes files via:
 
-⚠️ Aucun système de sauvegarde n’est présent.
+/download/<filename>
 
----
+Runs in a separate thread.
 
-## ⚠️ Limitations importantes
+ngrok
 
-Ce système présente plusieurs limites structurelles :
+Creates a public tunnel to the local Flask server:
 
-### ❌ Pas de multi-utilisateur réel
-Les variables globales entraînent des conflits si plusieurs personnes utilisent le bot en même temps.
+generates public URL
+enables external file downloads
+📁 File management
+Files are stored locally as .mp4
+Automatically deleted after links are sent
+No persistent storage
+⚠️ Limitations
+No real multi-user support (global variables)
+No session isolation
+Strong dependency on external website structure
+Files are permanently deleted after use
+Public Flask server without authentication
+🔐 Security notes
 
-### ❌ Pas de gestion de sessions
-Les données d’un utilisateur peuvent être écrasées par un autre.
+Recommended improvements:
 
-### ❌ Dépendance externe
-Le bot dépend totalement de la structure du site cible. Si elle change, le bot casse.
+use .env for secrets
+secure Flask endpoints
+isolate user sessions
+replace global variables with proper state system
+add download queue
+restrict public access
+📌 Purpose
 
-### ❌ Suppression destructrice
-Tous les fichiers MP4 sont supprimés sans vérification fine.
+This project is educational and demonstrates how to combine multiple Python tools into a full automation pipeline:
 
-### ❌ Serveur public non sécurisé
-Le serveur Flask est exposé via ngrok sans authentification.
+Discord interaction
+web scraping
+video downloading
+local hosting
+public tunneling
 
----
+It is not intended for production use.
 
-## 🔐 Sécurité et améliorations recommandées
+📌 Summary
 
-Pour rendre le projet plus robuste :
+This bot turns simple Discord commands into a fully automated system that:
 
-- utiliser `.env` pour les tokens
-- ajouter authentification sur Flask
-- isoler les fichiers par utilisateur Discord
-- remplacer les variables globales par une structure de session
-- ajouter une file d’attente de téléchargement
-- limiter les accès au serveur public
-- ajouter logs et monitoring
-
----
-
-## 🚀 Objectif du projet
-
-Ce projet est principalement éducatif. Il démontre comment combiner plusieurs technologies Python pour créer un système automatisé complet :
-
-- interaction Discord
-- scraping web
-- téléchargement vidéo
-- serveur web local
-- exposition publique via tunnel
-
-Il ne s’agit pas d’un outil de production, mais d’une démonstration technique de bout en bout d’un pipeline automatisé de récupération et distribution de contenu vidéo.
-
----
-
-## 📌 Résumé
-
-Ce bot transforme une simple commande Discord en un système complet capable de :
-- sélectionner un anime
-- récupérer ses épisodes
-- télécharger les vidéos
-- héberger les fichiers localement
-- générer des liens de téléchargement publics
-
-Le tout entièrement automatisé, mais avec des limites importantes en termes de sécurité et de scalabilité.
+selects anime episodes
+extracts video links
+downloads content
+hosts files locally
+generates public download links
