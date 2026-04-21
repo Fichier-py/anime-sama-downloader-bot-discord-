@@ -96,105 +96,32 @@ Displays all available commands and usage rules.
 
 ## 📦 Installation
 
-To install all required dependencies:
+Before running the bot, make sure you have Python 3.10 or higher installed on your system. The bot depends on several external libraries, so a proper setup is required for everything to work correctly.
 
-```bash
+All dependencies can be installed automatically using the requirements file provided with the project:
+
 pip install -r requirements.txt
 
-If needed manually:
+This installs all required packages at once:
+- Discord.py (bot functionality)
+- requests (HTTP requests)
+- yt-dlp (video downloading)
+- Flask (local server)
+- pyngrok (public tunnel)
+
+If you do not have a requirements file, install everything manually:
 
 pip install discord.py requests yt-dlp flask pyngrok
 
-Optional (recommended):
-FFmpeg for better video compatibility:
+FFmpeg is strongly recommended for proper video handling and format compatibility.
 
-Windows: https://ffmpeg.org/download.html
-Linux:
+On Windows:
+- Download FFmpeg from the official website
+- Add it to system PATH
+
+On Linux:
+
+sudo apt update
 sudo apt install ffmpeg
-🚀 Running the bot
-python bot.py
 
-When started, the bot:
-
-launches Discord client
-starts Flask server in background
-opens ngrok tunnel
-becomes ready to use
-🧩 Architecture
-Discord bot
-
-Handles:
-
-command parsing
-temporary state storage
-download triggering
-Scraping system
-
-Fetches data from:
-
-https://anime-sama.to/catalogue/{anime}/season{season}/{language}/episodes.js
-
-Extracts video URLs using regex.
-
-Downloader
-
-Uses yt-dlp with:
-
-best format selection
-timeout handling
-automatic file naming
-Flask server
-
-Exposes files via:
-
-/download/<filename>
-
-Runs in a separate thread.
-
-ngrok
-
-Creates a public tunnel to the local Flask server:
-
-generates public URL
-enables external file downloads
-📁 File management
-Files are stored locally as .mp4
-Automatically deleted after links are sent
-No persistent storage
-⚠️ Limitations
-No real multi-user support (global variables)
-No session isolation
-Strong dependency on external website structure
-Files are permanently deleted after use
-Public Flask server without authentication
-🔐 Security notes
-
-Recommended improvements:
-
-use .env for secrets
-secure Flask endpoints
-isolate user sessions
-replace global variables with proper state system
-add download queue
-restrict public access
-📌 Purpose
-
-This project is educational and demonstrates how to combine multiple Python tools into a full automation pipeline:
-
-Discord interaction
-web scraping
-video downloading
-local hosting
-public tunneling
-
-It is not intended for production use.
-
-📌 Summary
-
-This bot turns simple Discord commands into a fully automated system that:
-
-selects anime episodes
-extracts video links
-downloads content
-hosts files locally
-generates public download links
+After installation, verify your setup by checking Python and installed packages. If imports work without errors, the bot is ready to run.
